@@ -14,8 +14,8 @@ DESCRIPTION
 
     When launched, the application consists of two vertical panels. The left
     panel is where you should type in your code sample. As the left hand
-    panel is changed, a PPI::Lexer::Dump output is continuously updated in
-    the right hand panel.
+    panel is changed, a PPI::Dumper output is continuously updated in the
+    right hand panel.
 
     There is a toolbar at the top of the application with two icon buttons,
     currently without icons. The first toolbar button clears the panels, the

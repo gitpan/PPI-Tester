@@ -7,12 +7,12 @@ use strict;
 # The very first version
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.05';
+	$VERSION = '0.06';
 }
 
 # Load in the PPI classes
-use PPI::Lexer       ();
-use PPI::Lexer::Dump ();
+use PPI::Lexer  ();
+use PPI::Dumper ();
 
 # Load in the wxWindows library
 use Wx;
@@ -241,9 +241,9 @@ sub debug {
 	}
 
 	# Dump the Document to the dump screen
-	my $Dumper = PPI::Lexer::Dump->new( $Document, indent => 2 )
+	my $Dumper = PPI::Dumper->new( $Document, indent => 2 )
 		or return $self->_error("Failed to created PPI::Document dumper");
-	my $output = $Dumper->dump_string
+	my $output = $Dumper->string
 		or return $self->_error("Dumper failed to generate output");
 	$self->{Output}->SetValue( $output );
 
@@ -283,7 +283,7 @@ the command line.
 
 When launched, the application consists of two vertical panels. The left
 panel is where you should type in your code sample. As the left hand panel
-is changed, a PPI::Lexer::Dump output is continuously updated in the right
+is changed, a PPI::Dumper output is continuously updated in the right
 hand panel.
 
 There is a toolbar at the top of the application with two icon buttons,

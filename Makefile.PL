@@ -1,22 +1,21 @@
-require 5.000;
-use ExtUtils::MakeMaker;
-WriteMakefile(
-	'NAME'         => 'PPI::Tester',
-	'VERSION_FROM' => 'lib/PPI/Tester.pm',
-	'PREREQ_PM'    => {
-		# Application dependencies
-		PPI        => '0.828',
-		Wx         => '0.19',
+use inc::Module::Install;
 
-		# Test dependencies
-		Test::More => 0,
-	},
-	'EXE_FILES' => [
-		# The point of this entire exercise
-		'bin/ppitester',
-	],
-	($] >= 5.005) ? (
-		'AUTHOR'   => 'Adam Kennedy (cpan@ali.as)',
-		'ABSTRACT' => 'A wxPerl-based interactive PPI debugger/tester',
-	) : (),
-);
+name          ( 'PPI-Tester'                );
+abstract      ( 'A wxPerl-based interactive PPI debugger/tester' );
+author        ( 'Adam Kennedy<cpan@ali.as>' );
+version_from  ( 'lib/PPI/Tester.pm'         );
+license       ( 'perl'                      );
+
+requires      ( 'perl'           => '5.005' );
+requires      ( 'PPI'            => '0.840' );
+requires      ( 'Wx'             => '0.19'  );
+
+build_requires( 'File::Spec'     => '0.82'  );
+build_requires( 'Test::More'     => '0.47'  );
+
+# The point of this entire exercise
+install_script( 'bin/ppitester' );
+
+auto_install();
+
+&WriteAll;

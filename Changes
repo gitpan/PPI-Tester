@@ -1,5 +1,9 @@
 Revision history for Perl extension PPI::Tester and script ppitester
 
+0.06 Tue Jan  3 2004
+	- Synchronised with the API changes in 0.840
+	- Updated to use Module::Build MakeFile.PL
+
 0.05 Wed Aug 18 2004
 	- Contributions from DH integrated
 	- Several small changes to various things
