@@ -1,0 +1,9 @@
+Revision history for Perl extension PPI::Tester and script ppitester
+
+0.02 Sun Jun 27 2004
+	- Changed the script and module names for release
+	- Created the initial CPAN-uploadable package
+	- Yes, I'm aware that the icons arn't visible
+
+0.01 Sat Jun 26 2004
+	- Create the basics, as a private application only
