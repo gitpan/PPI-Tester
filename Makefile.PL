@@ -5,8 +5,8 @@ WriteMakefile(
 	'VERSION_FROM' => 'lib/PPI/Tester.pm',
 	'PREREQ_PM'    => {
 		# Application dependencies
-		PPI        => 0.814,
-		Wx         => 0.19,
+		PPI        => '0.828',
+		Wx         => '0.19',
 
 		# Test dependencies
 		Test::More => 0,

@@ -7,7 +7,7 @@ use strict;
 # The very first version
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.04';
+	$VERSION = '0.05';
 }
 
 # Load in the PPI classes
@@ -16,7 +16,7 @@ use PPI::Lexer::Dump ();
 
 # Load in the wxWindows library
 use Wx;
-sub new { PPI::Tester::App->new };
+sub new { PPI::Tester::App->new }
 
 
 
@@ -29,7 +29,7 @@ package PPI::Tester::App;
 
 use base 'Wx::App';
 
-use constant APPLICATION_NAME => "PPI Tester - PPI $PPI::VERSION";
+use constant APPLICATION_NAME => "PPI Tester $PPI::Tester::VERSION - PPI $PPI::VERSION";
 
 sub OnInit {
 	my $self = shift;
@@ -49,7 +49,7 @@ sub OnInit {
 	$self->SetTopWindow($Frame);
 	$Frame->Show(1);
 
-	# So an initial parse
+	# Do an initial parse
 	$Frame->debug;
 
 	1;
@@ -83,8 +83,11 @@ sub new {
 	my $class = shift;
 	my $self = $class->SUPER::new(@_);
 
+	# Use the pretty Wx icon
+	$self->SetIcon( Wx::GetWxPerlIcon() );
+
 	# Create and populate the toolbar
-	$self->CreateToolBar( wxNO_BORDER | wxTB_HORIZONTAL );
+	$self->CreateToolBar( wxNO_BORDER | wxTB_HORIZONTAL | wxTB_TEXT | wxTB_NOICONS );
 	$self->GetToolBar->AddTool( CMD_CLEAR, 'Clear', wxNullBitmap );
 	$self->GetToolBar->AddTool( CMD_LOAD,  'Load',  wxNullBitmap );
 	# $self->GetToolBar->AddSeparator;
@@ -112,11 +115,11 @@ sub new {
 	# Create the options checkboxes
 	$Left->GetSizer->Add(
 		$self->{Option}->{StripWhitespace} = Wx::CheckBox->new(
-			$Left,              # Parent panel
-			STRIP_WHITESPACE,   # ID
-			'Strip Whitespace', # Label
-			wxDefaultPosition,  # Automatic position
-			wxDefaultSize,      # Default size
+			$Left,               # Parent panel
+			STRIP_WHITESPACE,    # ID
+			'Ignore Whitespace', # Label
+			wxDefaultPosition,   # Automatic position
+			wxDefaultSize,       # Default size
 			),
 		0,        # Expands vertically
 		wxALL,    # Border on all sides
@@ -155,7 +158,7 @@ sub new {
 		1,        # Expands horizontally
 		wxEXPAND, # Expands vertically
 		);
-	$self->{Output}->Enable(0);
+	$self->{Output}->Enable(1);
 
 	# Set the initial focus
 	$self->{Code}->SetFocus;
@@ -186,7 +189,40 @@ sub clear {
 # Load a file
 sub load {
 	my $self = shift;
-	$self->_error("Incomplete. Later, this will load a file");
+	my $event = shift;
+
+	# Create the file selection dialog
+	my $Dialog = Wx::FileDialog->new(
+		$self,           # Parent window
+		"Select a file", # Message to show on the dialog
+		"",              # The default directory
+		"",              # The default filename
+
+		# Wildcard. Long and complicated, but very comprehensive
+		"Modules(*.pm)|*.pm|perl header(.*ph)|*.ph|*.cgi|*.cgi|perl programs (*.pl)|*.pl|test files (*.t)|*.t|AutoSplit (*.al)|All files (*.*)|*.*",
+
+		# The "Open as Read-Only" means nothing to us (I think)
+		wxOPEN | wxHIDE_READONLY,
+		);
+
+	if ( $Dialog->ShowModal == wxID_CANCEL ) {
+		# Do nothing if they cancel
+	} else {
+		my $file = $Dialog->GetPath;
+		if ( open INFILE, $file ) {
+			# Read the file
+			binmode INFILE;
+			my $code = join '', <INFILE>;
+
+			# Set the code in the text control
+			$self->{Code}->SetInsertionPoint(0);
+			$self->{Code}->SetValue( $code );
+		} else {
+			Wx::LogMessage( "Couldn't open $file : $! " );
+		}
+	}
+
+	$Dialog->Destroy;
 }
 
 # Do a processing run
@@ -205,7 +241,7 @@ sub debug {
 	}
 
 	# Dump the Document to the dump screen
-	my $Dumper = PPI::Lexer::Dump->new( $Document, indent => 4 )
+	my $Dumper = PPI::Lexer::Dump->new( $Document, indent => 2 )
 		or return $self->_error("Failed to created PPI::Document dumper");
 	my $output = $Dumper->dump_string
 		or return $self->_error("Dumper failed to generate output");
@@ -257,8 +293,6 @@ implemented. ( It's early days yet for this application ).
 
 =head1 TO DO
 
-- The "Load file" toolbar button does not work yet
-
 - There are no icons on the toolbar buttons
 
 - An option is needed to save both the left and right panels into
@@ -269,23 +303,26 @@ implemented. ( It's early days yet for this application ).
 To file a bug against this module, in a way you can keep track of, see the CPAN
 bug tracking system.
 
-  http://rt.cpan.org/NoAuth/ReportBug.html?Queue=PPI%3A%3ATester
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=PPI%3A%3ATester>
 
-For general comments, contact the author.
+For general comments, contact the maintainer.
 
 =head1 AUTHOR
 
-        Adam Kennedy ( maintainer )
-        cpan@ali.as
-        http://ali.as/
+Adam Kennedy (maintainer), cpan@ali.as, L<http://ali.as/>
+
+Load function originally by 'DH' (email suppressed)
 
 =head1 SEE ALSO
 
-L<PPI::Manual>, http://ali.as/CPAN/PPI
+L<PPI::Manual|PPI::Manual>, L<http://ali.as/CPAN/PPI>
 
 =head1 COPYRIGHT
 
 Copyright (c) 2004 Adam Kennedy. All rights reserved.
+
+Some parts copyright (c) 2004 'DH'.
+
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
 

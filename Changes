@@ -1,5 +1,12 @@
 Revision history for Perl extension PPI::Tester and script ppitester
 
+0.05 Wed Aug 18 2004
+	- Contributions from DH integrated
+	- Several small changes to various things
+	- Toolbar temporarily has text untils icons work
+	- The load button now works
+	- Updated dependencies to force the latest PPI version
+
 0.04 Wed 21 July 2004
 	- Tweaked the code to make application behave a little more sensibly
 	- Optionally filter out whitespace
