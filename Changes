@@ -1,5 +1,11 @@
 Revision history for Perl extension PPI::Tester and script ppitester
 
+0.04 Wed 21 July 2004
+	- Tweaked the code to make application behave a little more sensibly
+	- Optionally filter out whitespace
+
+0.03 Missing
+
 0.02 Sun Jun 27 2004
 	- Changed the script and module names for release
 	- Created the initial CPAN-uploadable package

@@ -7,7 +7,7 @@ use strict;
 # The very first version
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.02';
+	$VERSION = '0.04';
 }
 
 # Load in the PPI classes
@@ -29,7 +29,7 @@ package PPI::Tester::App;
 
 use base 'Wx::App';
 
-use constant APPLICATION_NAME => 'PPI Tester';
+use constant APPLICATION_NAME => "PPI Tester - PPI $PPI::VERSION";
 
 sub OnInit {
 	my $self = shift;
@@ -40,9 +40,10 @@ sub OnInit {
 		undef,               # Parent Window
 		-1,                  # Id
 		APPLICATION_NAME,    # Title
-		[-1,-1],             # Default size
-		[-1,-1],             # Default position
+		[-1, -1],             # Default size
+		[-1, -1],             # Default position
 		);
+	$Frame->CentreOnScreen;
 
 	# Set it as the top window and show it
 	$self->SetTopWindow($Frame);
@@ -66,12 +67,17 @@ package PPI::Tester::Window;
 use base 'Wx::Frame';
 use Wx        qw{:everything};
 use Wx::Event 'EVT_TOOL',
-              'EVT_TEXT';
+              'EVT_TEXT',
+              'EVT_CHECKBOX';
 
-use constant CMD_CLEAR => 1;
-use constant CMD_LOAD  => 2;
-use constant CMD_DEBUG => 3;
-use constant CODE_BOX  => 4;
+# wxWindowIDs
+use constant CMD_CLEAR        => 1;
+use constant CMD_LOAD         => 2;
+use constant CMD_DEBUG        => 3;
+use constant CODE_BOX         => 4;
+use constant STRIP_WHITESPACE => 5;
+
+my $initial_code = 'my $code = "here";';
 
 sub new {
 	my $class = shift;
@@ -91,45 +97,77 @@ sub new {
 	# EVT_TOOL( $self, CMD_DEBUG, \&debug );
 
 	# Create the split window with the two panels in it
-	my $Splitter = Wx::SplitterWindow->new( $self, -1 );
+	my $Splitter = Wx::SplitterWindow->new(
+		$self,             # Parent window
+		-1,                # Default ID
+		wxDefaultPosition, # Normal position
+		wxDefaultSize,     # Automatic size
+		);
 	my $Left     = Wx::Panel->new( $Splitter, -1 );
 	my $Right    = Wx::Panel->new( $Splitter, -1 );
 	$Splitter->SplitVertically( $Left, $Right, 0 );
+	$Left->SetSizer(  Wx::BoxSizer->new(wxVERTICAL) );
+	$Right->SetSizer( Wx::BoxSizer->new(wxHORIZONTAL) );
 
-	# Create the resizing code textbox for the left side
-	$Left->SetSizer( Wx::BoxSizer->new(wxHORIZONTAL) );
+	# Create the options checkboxes
+	$Left->GetSizer->Add(
+		$self->{Option}->{StripWhitespace} = Wx::CheckBox->new(
+			$Left,              # Parent panel
+			STRIP_WHITESPACE,   # ID
+			'Strip Whitespace', # Label
+			wxDefaultPosition,  # Automatic position
+			wxDefaultSize,      # Default size
+			),
+		0,        # Expands vertically
+		wxALL,    # Border on all sides
+		5,        # Small border area
+		);
+	$self->{Option}->{StripWhitespace}->SetValue(1);
+
+	# Create the resizer code area on the left side
 	$Left->GetSizer->Add(
 		$self->{Code} = Wx::TextCtrl->new(
-			$Left,                 # Parent panel,
-			CODE_BOX,
-			'my $code = "here";',  # Help new users get a clue
-			wxDefaultPosition,     # Normal position
-			wxDefaultSize,         # Default size
-			wxTE_PROCESS_TAB | wxTE_MULTILINE,
+			$Left,                # Parent panel,
+			CODE_BOX,             # ID
+			$initial_code,        # Help new users get a clue
+			wxDefaultPosition,    # Normal position
+			wxDefaultSize,        # Minimum size
+			wxTE_PROCESS_TAB      # We keep tab presses (not working?)
+			| wxTE_MULTILINE,     # Textarea
 			),
-		1,
-		wxEXPAND,
+		1,        # Expands vertically
+		wxEXPAND, # Expands horizontally
 		);
-	$Left->SetAutoLayout(1);
-
-	# Update the output on every code box change
-	EVT_TEXT( $self, CODE_BOX, \&debug );
+	
 
 	# Create the resizing output textbox for the right side
-	$Right->SetSizer( Wx::BoxSizer->new(wxHORIZONTAL) );
 	$Right->GetSizer->Add(
 		$self->{Output} = Wx::TextCtrl->new(
 			$Right,                         # Parent panel,
-			-1,
+			-1,                             # Default ID
 			'',                             # Help new users get a clue
 			wxDefaultPosition,              # Normal position
 			wxDefaultSize,                  # Minimum size
-			wxTE_READONLY | wxTE_MULTILINE, # You can't change this stuff
+			wxTE_READONLY                   # Output you can't change
+			| wxTE_MULTILINE                # Textarea
+			| wxHSCROLL,
 			),
-		1,
-		wxEXPAND,
+		1,        # Expands horizontally
+		wxEXPAND, # Expands vertically
 		);
+	$self->{Output}->Enable(0);
+
+	# Set the initial focus
+	$self->{Code}->SetFocus;
+	$self->{Code}->SetInsertionPointEnd;
+
+	# Enable the sizers
+	$Left->SetAutoLayout(1);
 	$Right->SetAutoLayout(1);
+
+	# When the user does just about anything, regenerate
+	EVT_TEXT( $self, CODE_BOX, \&debug );
+	EVT_CHECKBOX( $self, STRIP_WHITESPACE, \&debug);
 
 	# Create the lexing and debugging objects
 	$self->{Lexer} = PPI::Lexer->new;
@@ -160,11 +198,21 @@ sub debug {
 	# Parse and dump the content
 	my $Document = $self->{Lexer}->lex_source( $source )
 		or return $self->_error("Error during lex");
+
+	# Does the user want to strip whitespace?
+	if ( $self->{Option}->{StripWhitespace}->IsChecked ) {
+		$Document->prune('PPI::Token::Whitespace');
+	}
+
+	# Dump the Document to the dump screen
 	my $Dumper = PPI::Lexer::Dump->new( $Document, indent => 4 )
 		or return $self->_error("Failed to created PPI::Document dumper");
 	my $output = $Dumper->dump_string
 		or return $self->_error("Dumper failed to generate output");
 	$self->{Output}->SetValue( $output );
+
+	# Keep the focus on the code
+	$self->{Code}->SetFocus;
 
 	1;
 }

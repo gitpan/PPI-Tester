@@ -3,6 +3,8 @@
 # A Wx-based desktop application to help test and debug PPI.
 
 use strict;
+use FindBin; BEGIN { chdir $FindBin::Bin; }
+use lib '..\..\modules';
 
 # Load and run the Tester
 use PPI::Tester;
