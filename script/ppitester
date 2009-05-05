@@ -1,23 +1,26 @@
 #!/usr/bin/perl
 
-# A Wx-based desktop application to help test and debug PPI.
+# Launch script for a Wx-based desktop application to help
+# test and debug PPI.
 
+use 5.006;
 use strict;
-use FindBin; BEGIN { chdir $FindBin::Bin; }
-use lib '..\..\modules';
 
-# Load and run the Tester
+use vars qw{$VERSION};
+BEGIN {
+	$VERSION = '0.15';
+}
+
 use PPI::Tester;
-my $instance = PPI::Tester->new
-	or die "Failed to load PPI Tester application";
-$instance->MainLoop;
-exit(0);
+PPI::Tester->main;
+
+__END__
 
 =pod
 
 =head1 NAME
 
-PPI::Tester - A wxPerl-based interactive PPI debugger/tester
+ppitester - A wxPerl-based interactive PPI debugger/tester
 
 =head1 DESCRIPTION
 
@@ -43,8 +46,6 @@ implemented. ( It's early days yet for this application ).
 
 =head1 TO DO
 
-- The "Load file" toolbar button does not work yet
-
 - There are no icons on the toolbar buttons
 
 - An option is needed to save both the left and right panels into
@@ -52,8 +53,8 @@ implemented. ( It's early days yet for this application ).
 
 =head1 SUPPORT
 
-To file a bug against this module, in a way you can keep track of, see the CPAN
-bug tracking system.
+To file a bug against this module, in a way you can keep track of,
+see the CPAN bug tracking system.
 
   http://rt.cpan.org/NoAuth/ReportBug.html?Queue=PPI%3A%3ATester
 
@@ -61,17 +62,16 @@ For general comments, contact the author.
 
 =head1 AUTHOR
 
-        Adam Kennedy ( maintainer )
-        cpan@ali.as
-        http://ali.as/
+Adam Kennedy E<lt>adamk@cpan.orgE<gt>
 
 =head1 SEE ALSO
 
-L<PPI::Manual>, http://ali.as/CPAN/PPI
+L<PPI::Manual>, L<http://ali.as/>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2004 Adam Kennedy. All rights reserved.
+Copyright 2004 - 2006 Adam Kennedy.
+
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
 

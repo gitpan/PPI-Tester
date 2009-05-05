@@ -32,22 +32,18 @@ SUPPORT
     To file a bug against this module, in a way you can keep track of, see
     the CPAN bug tracking system.
 
-    <http://rt.cpan.org/NoAuth/ReportBug.html?Queue=PPI%3A%3ATester>
+    <http://rt.cpan.org/NoAuth/ReportBug.html?Queue=PPI-Tester>
 
     For general comments, contact the maintainer.
 
 AUTHOR
-    Adam Kennedy (maintainer), cpan@ali.as, <http://ali.as/>
-
-    Load function originally by 'DH' (email suppressed)
+    Adam Kennedy <adamk@cpan.org>
 
 SEE ALSO
-    PPI::Manual, <http://ali.as/CPAN/PPI>
+    PPI::Manual, <http://sf.net/parseperl>
 
 COPYRIGHT
-    Copyright (c) 2004 Adam Kennedy. All rights reserved.
-
-    Some parts copyright (c) 2004 'DH'.
+    Copyright 2004 - 2009 Adam Kennedy.
 
     This program is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself.

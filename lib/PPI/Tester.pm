@@ -2,32 +2,42 @@ package PPI::Tester;
 
 # The PPI Tester application
 
+use 5.006;
 use strict;
+use PPI            1.000 ();
+use PPI::Dumper    1.000 ();
+use Devel::Dumpvar  0.04 ();
+use Wx              0.85 ();
 
-# The very first version
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.06';
+	$VERSION = '0.15';
 }
 
-# Load in the PPI classes
-use PPI::Lexer  ();
-use PPI::Dumper ();
+sub main {
+	my $class = shift;
+	my $app   = $class->new;
+	unless ( $app ) {
+		croak("Failed to load PPI Tester application");
+	}
+	$app->MainLoop;
+	exit(0);
+}
 
-# Load in the wxWindows library
-use Wx;
-sub new { PPI::Tester::App->new }
+sub new {
+	PPI::Tester::App->new;
+}
 
 
 
 
 
 #####################################################################
-package PPI::Tester::App;
-
 # The main application class
 
-use base 'Wx::App';
+package PPI::Tester::App;
+
+our @ISA = 'Wx::App';
 
 use constant APPLICATION_NAME => "PPI Tester $PPI::Tester::VERSION - PPI $PPI::VERSION";
 
@@ -36,23 +46,23 @@ sub OnInit {
 	$self->SetAppName(APPLICATION_NAME);
 
 	# Create the one and only frame
-	my $Frame = PPI::Tester::Window->new(
-		undef,               # Parent Window
-		-1,                  # Id
-		APPLICATION_NAME,    # Title
-		[-1, -1],             # Default size
-		[-1, -1],             # Default position
-		);
-	$Frame->CentreOnScreen;
+	my $frame = PPI::Tester::Window->new(
+		undef,            # Parent Window
+		-1,               # Id
+		APPLICATION_NAME, # Title
+		[-1, -1],         # Default size
+		[-1, -1],         # Default position
+	);
+	$frame->CentreOnScreen;
 
 	# Set it as the top window and show it
-	$self->SetTopWindow($Frame);
-	$Frame->Show(1);
+	$self->SetTopWindow($frame);
+	$frame->Show(1);
 
 	# Do an initial parse
-	$Frame->debug;
+	$frame->debug;
 
-	1;
+	return 1;
 }
 
 
@@ -60,15 +70,15 @@ sub OnInit {
 
 
 #####################################################################
-package PPI::Tester::Window;
-
 # The main window for the application
 
-use base 'Wx::Frame';
-use Wx        qw{:everything};
-use Wx::Event 'EVT_TOOL',
-              'EVT_TEXT',
-              'EVT_CHECKBOX';
+package PPI::Tester::Window;
+
+our @ISA = 'Wx::Frame';
+
+use Wx        qw{ :everything };
+use Wx        qw{ wxHIDE_READONLY };
+use Wx::Event qw{ EVT_TOOL EVT_TEXT EVT_CHECKBOX };
 
 # wxWindowIDs
 use constant CMD_CLEAR        => 1;
@@ -77,11 +87,11 @@ use constant CMD_DEBUG        => 3;
 use constant CODE_BOX         => 4;
 use constant STRIP_WHITESPACE => 5;
 
-my $initial_code = 'my $code = "here";';
+my $initial_code = '';
 
 sub new {
 	my $class = shift;
-	my $self = $class->SUPER::new(@_);
+	my $self  = $class->SUPER::new(@_);
 
 	# Use the pretty Wx icon
 	$self->SetIcon( Wx::GetWxPerlIcon() );
@@ -105,9 +115,9 @@ sub new {
 		-1,                # Default ID
 		wxDefaultPosition, # Normal position
 		wxDefaultSize,     # Automatic size
-		);
-	my $Left     = Wx::Panel->new( $Splitter, -1 );
-	my $Right    = Wx::Panel->new( $Splitter, -1 );
+	);
+	my $Left  = Wx::Panel->new( $Splitter, -1 );
+	my $Right = Wx::Panel->new( $Splitter, -1 );
 	$Splitter->SplitVertically( $Left, $Right, 0 );
 	$Left->SetSizer(  Wx::BoxSizer->new(wxVERTICAL) );
 	$Right->SetSizer( Wx::BoxSizer->new(wxHORIZONTAL) );
@@ -120,11 +130,11 @@ sub new {
 			'Ignore Whitespace', # Label
 			wxDefaultPosition,   # Automatic position
 			wxDefaultSize,       # Default size
-			),
+		),
 		0,        # Expands vertically
 		wxALL,    # Border on all sides
 		5,        # Small border area
-		);
+	);
 	$self->{Option}->{StripWhitespace}->SetValue(1);
 
 	# Create the resizer code area on the left side
@@ -137,27 +147,26 @@ sub new {
 			wxDefaultSize,        # Minimum size
 			wxTE_PROCESS_TAB      # We keep tab presses (not working?)
 			| wxTE_MULTILINE,     # Textarea
-			),
+		),
 		1,        # Expands vertically
 		wxEXPAND, # Expands horizontally
-		);
-	
+	);
 
 	# Create the resizing output textbox for the right side
 	$Right->GetSizer->Add(
 		$self->{Output} = Wx::TextCtrl->new(
-			$Right,                         # Parent panel,
-			-1,                             # Default ID
-			'',                             # Help new users get a clue
-			wxDefaultPosition,              # Normal position
-			wxDefaultSize,                  # Minimum size
-			wxTE_READONLY                   # Output you can't change
-			| wxTE_MULTILINE                # Textarea
+			$Right,            # Parent panel,
+			-1,                # Default ID
+			'',                # Help new users get a clue
+			wxDefaultPosition, # Normal position
+			wxDefaultSize,     # Minimum size
+			wxTE_READONLY      # Output you can't change
+			| wxTE_MULTILINE   # Textarea
 			| wxHSCROLL,
-			),
+		),
 		1,        # Expands horizontally
 		wxEXPAND, # Expands vertically
-		);
+	);
 	$self->{Output}->Enable(1);
 
 	# Set the initial focus
@@ -172,23 +181,19 @@ sub new {
 	EVT_TEXT( $self, CODE_BOX, \&debug );
 	EVT_CHECKBOX( $self, STRIP_WHITESPACE, \&debug);
 
-	# Create the lexing and debugging objects
-	$self->{Lexer} = PPI::Lexer->new;
-
 	$self;
 }
 
 # Clear the two test areas
 sub clear {
-	my $self = shift;
-	$self->{Code}->Clear;
-	$self->{Output}->Clear;
-	1;
+	$_[0]->{Code}->Clear;
+	$_[0]->{Output}->Clear;
+	return 1;
 }
 
 # Load a file
 sub load {
-	my $self = shift;
+	my $self  = shift;
 	my $event = shift;
 
 	# Create the file selection dialog
@@ -202,8 +207,8 @@ sub load {
 		"Modules(*.pm)|*.pm|perl header(.*ph)|*.ph|*.cgi|*.cgi|perl programs (*.pl)|*.pl|test files (*.t)|*.t|AutoSplit (*.al)|All files (*.*)|*.*",
 
 		# The "Open as Read-Only" means nothing to us (I think)
-		wxOPEN | wxHIDE_READONLY,
-		);
+		wxFD_OPEN, # | wxFD_HIDE_READONLY
+	);
 
 	if ( $Dialog->ShowModal == wxID_CANCEL ) {
 		# Do nothing if they cancel
@@ -227,13 +232,30 @@ sub load {
 
 # Do a processing run
 sub debug {
-	my $self = shift;
-	my $source = $self->{Code}->GetValue
-		or return $self->_error("Nothing to parse");
+	my $self   = shift;
+	my $source = $self->{Code}->GetValue;
+	unless ( $source ) {
+		return $self->_error("Nothing to parse");
+	}
 
 	# Parse and dump the content
-	my $Document = $self->{Lexer}->lex_source( $source )
-		or return $self->_error("Error during lex");
+	my $Document = eval { PPI::Document->new( \$source ) };
+	if ( ref $@ ) {
+		# Dump the exception
+		my $dumper = Devel::Dumpvar->new(
+			to => 'return',
+		) or die "Failed to create dumper";
+		my $dumped =  $dumper->dump($@);
+
+		# Chop off the initial "0  " from "0  PPI::Exception"
+		$dumped =~ s/^...//;
+
+		return $self->_error( $dumped );
+	} elsif ( $@ ) {
+		return $self->_error("Uncaught Error!\n  $@");
+	} elsif ( ! $Document ) {
+		return $self->_error("Failed to parse document");
+	}
 
 	# Does the user want to strip whitespace?
 	if ( $self->{Option}->{StripWhitespace}->IsChecked ) {
@@ -241,10 +263,14 @@ sub debug {
 	}
 
 	# Dump the Document to the dump screen
-	my $Dumper = PPI::Dumper->new( $Document, indent => 2 )
-		or return $self->_error("Failed to created PPI::Document dumper");
-	my $output = $Dumper->string
-		or return $self->_error("Dumper failed to generate output");
+	my $Dumper = PPI::Dumper->new( $Document, indent => 2 );
+	unless ( $Dumper ) {
+		return $self->_error("Failed to created PPI::Document dumper");
+	}
+	my $output = $Dumper->string;
+	unless ( $output ) {
+		return $self->_error("Dumper failed to generate output");
+	}
 	$self->{Output}->SetValue( $output );
 
 	# Keep the focus on the code
@@ -254,11 +280,10 @@ sub debug {
 }
 
 sub _error {
-	my $self = shift;
+	my $self    = shift;
 	my $message = join "\n", @_;
 	$self->{Output}->SetValue( $message );
-
-	1;
+	return 1;
 }
 
 1;
@@ -303,25 +328,21 @@ implemented. ( It's early days yet for this application ).
 To file a bug against this module, in a way you can keep track of, see the CPAN
 bug tracking system.
 
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=PPI%3A%3ATester>
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=PPI-Tester>
 
 For general comments, contact the maintainer.
 
 =head1 AUTHOR
 
-Adam Kennedy (maintainer), cpan@ali.as, L<http://ali.as/>
-
-Load function originally by 'DH' (email suppressed)
+Adam Kennedy E<lt>adamk@cpan.orgE<gt>
 
 =head1 SEE ALSO
 
-L<PPI::Manual|PPI::Manual>, L<http://ali.as/CPAN/PPI>
+L<PPI::Manual>, L<http://sf.net/parseperl>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2004 Adam Kennedy. All rights reserved.
-
-Some parts copyright (c) 2004 'DH'.
+Copyright 2004 - 2009 Adam Kennedy.
 
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.

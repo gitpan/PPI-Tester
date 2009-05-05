@@ -1,21 +1,10 @@
-use inc::Module::Install;
+use inc::Module::Install::DSL 0.86;
 
-name          ( 'PPI-Tester'                );
-abstract      ( 'A wxPerl-based interactive PPI debugger/tester' );
-author        ( 'Adam Kennedy<cpan@ali.as>' );
-version_from  ( 'lib/PPI/Tester.pm'         );
-license       ( 'perl'                      );
-
-requires      ( 'perl'           => '5.005' );
-requires      ( 'PPI'            => '0.840' );
-requires      ( 'Wx'             => '0.19'  );
-
-build_requires( 'File::Spec'     => '0.82'  );
-build_requires( 'Test::More'     => '0.47'  );
-
-# The point of this entire exercise
-install_script( 'bin/ppitester' );
-
-auto_install();
-
-&WriteAll;
+all_from       lib/PPI/Tester.pm
+requires       Devel::Dumpvar 0.04
+requires       PPI            1.201
+requires       Wx             0.54
+test_requires  File::Spec     0.80
+test_requires  Test::More     0.47
+test_requires  Test::Script   1.02
+install_script ppitester
